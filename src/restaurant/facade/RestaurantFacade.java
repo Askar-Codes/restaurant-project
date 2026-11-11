@@ -27,12 +27,13 @@ public class RestaurantFacade {
                 .withCustomerName(customerName);
     }
 
-    public void addMealToOrder(MealType mealType, ToppingType... toppings) {
+    public Meal addMealToOrder(MealType mealType, ToppingType... toppings) {
         Meal meal = mealType.createMeal();              // Factory Method
         for (ToppingType topping : toppings) {
             meal = addToppingOnlyIfItFitsTheMeal(meal, mealType, topping);   // Decorator
         }
         orderBuilder.addMeal(meal);                     // Builder
+        return meal;
     }
 
     private Meal addToppingOnlyIfItFitsTheMeal(Meal meal, MealType mealType, ToppingType topping) {
