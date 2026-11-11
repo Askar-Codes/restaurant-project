@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pattern Diner</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8D%94%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --mint:#CFEFE2; --mint-deep:#A9DFCB; --ink:#1B2430; --cherry:#D6283E;
+  --butter:#FFD45C; --teal:#1F8A70; --paper:#FFFFFF; --soft:#4B5A68;
+  --display:"Bowlby One","Arial Black",Impact,sans-serif;
+  --body:"Nunito Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+  --receipt:"Courier New",ui-monospace,monospace;
+  --edge:2.5px solid var(--ink);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--mint);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;min-height:100vh}
+h1,h2,h3,p,ul,ol{margin:0}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px;box-shadow:0 0 0 6px var(--butter)}
+
+.checker{height:28px;border-bottom:var(--edge);
+  background:conic-gradient(var(--ink) 25%,var(--paper) 0 50%,var(--ink) 0 75%,var(--paper) 0) 0 0/28px 28px}
+.shell{max-width:1360px;margin:0 auto;padding-left:clamp(16px,4vw,40px);padding-right:clamp(16px,4vw,40px)}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;padding-top:24px;padding-bottom:8px}
+.sign{font-family:var(--display);font-weight:400;font-size:clamp(1.6rem,3.4vw,2.3rem);line-height:1;color:var(--paper);
+  background:var(--cherry);border:var(--edge);border-radius:14px;padding:.35em .8em .4em;box-shadow:5px 5px 0 var(--ink);transform:rotate(-1.5deg)}
+.order-chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:var(--edge);border-radius:999px;background:var(--paper);padding:3px 14px;font-weight:800}
+
+.tracker{list-style:none;padding:0;margin-top:18px;display:grid;grid-template-columns:repeat(4,1fr)}
+.tracker li{position:relative;display:grid;justify-items:center;gap:6px;text-align:center;font-weight:800;color:var(--soft)}
+.tracker li::before{content:"";position:absolute;top:24px;right:50%;width:100%;height:6px;background:var(--mint-deep)}
+.tracker li:first-child::before{display:none}
+.tracker .icon{position:relative;z-index:1;width:52px;height:52px;border:var(--edge);border-radius:50%;background:var(--paper);
+  display:grid;place-items:center;font-size:1.45rem;filter:grayscale(1);opacity:.55;transition:background .2s}
+.tracker li.done,.tracker li.current{color:var(--ink)}
+.tracker li.done::before,.tracker li.current::before{background:var(--ink)}
+.tracker li.done .icon{background:var(--teal);filter:none;opacity:1}
+.tracker li.current .icon{background:var(--butter);filter:none;opacity:1;box-shadow:0 0 0 5px rgba(255,212,92,.55)}
+.next-step{margin-top:14px;font-weight:700;font-size:1.05rem;max-width:70ch}
+
+.stage{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr) minmax(0,1fr);gap:26px;margin-top:22px;align-items:start}
+h2{font-family:var(--display);font-weight:400;font-size:1.3rem;margin-bottom:12px}
+.panel{background:var(--paper);border:var(--edge);border-radius:22px;box-shadow:5px 5px 0 var(--ink);padding:20px}
+.hint{color:var(--soft);font-size:.95rem}
+
+.btn{font-family:var(--display);font-size:1.05rem;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:.65em 1.15em;border:var(--edge);border-radius:14px;background:var(--cherry);color:var(--paper);
+  box-shadow:4px 4px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.btn:hover:not(:disabled){transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--ink)}
+.btn:active:not(:disabled){transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:2px 2px 0 var(--ink)}
+.btn.light{background:var(--paper);color:var(--ink)}
+.btn.teal{background:var(--teal)}
+.btn.full{width:100%}
+.price-badge{background:var(--paper);color:var(--ink);border-radius:999px;padding:0 .6em;font-family:var(--body);font-weight:800;font-size:.95rem}
+
+.meal-choices{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.meal-choice{display:grid;gap:2px;justify-items:center;padding:12px 6px 10px;background:var(--paper);border:var(--edge);border-radius:18px;
+  box-shadow:3px 3px 0 var(--ink);transition:transform .08s,box-shadow .08s,background .15s}
+.meal-choice:hover:not(:disabled){transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+.meal-choice[aria-pressed="true"]{background:var(--butter);transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.meal-choice:disabled{opacity:.5;cursor:not-allowed}
+.meal-emoji{font-size:3.1rem;line-height:1.15}
+.meal-name{font-weight:800}
+.meal-price{font-family:var(--receipt);font-weight:700}
+.toppings-block{margin:18px 0 20px;min-height:96px}
+.toppings-title{font-weight:800;margin-bottom:10px}
+.topping-list{display:flex;flex-wrap:wrap;gap:10px}
+.topping{display:inline-flex;align-items:center;gap:8px;padding:7px 14px 7px 10px;background:var(--paper);border:var(--edge);border-radius:999px;font-weight:800;transition:background .12s}
+.topping:disabled{opacity:.5;cursor:not-allowed}
+.topping .tick{width:18px;height:18px;border:2px solid var(--ink);border-radius:50%;display:grid;place-items:center;font-size:.8rem;line-height:1;background:var(--paper)}
+.topping[aria-pressed="true"]{background:var(--teal);color:var(--paper)}
+.topping[aria-pressed="true"] .tick{background:var(--butter);color:var(--ink)}
+.topping[aria-pressed="true"] .tick::after{content:"\2713"}
+.topping .extra{font-family:var(--receipt);font-weight:700;font-size:.9rem;opacity:.85}
+
+.receipt{position:relative;background:var(--paper);padding:18px 18px 22px;font-family:var(--receipt);font-size:1rem;
+  filter:drop-shadow(4px 4px 0 var(--ink));margin-bottom:24px}
+.receipt::after{content:"";position:absolute;left:0;right:0;top:calc(100% - 1px);height:11px;
+  background:linear-gradient(135deg,var(--paper) 50%,transparent 0) 0 0/16px 11px,linear-gradient(225deg,var(--paper) 50%,transparent 0) 0 0/16px 11px}
+.receipt-head{text-align:center;padding-bottom:10px;margin-bottom:12px;border-bottom:2px dashed var(--ink)}
+.receipt-head strong{display:block;font-family:var(--display);font-weight:400;font-size:1.2rem}
+.receipt-head span{display:block;color:var(--soft);font-size:.92rem}
+.lines{list-style:none;padding:0;display:grid;gap:10px}
+.line{display:flex;justify-content:space-between;gap:12px}
+.line.fresh{animation:lineIn .35s ease-out}
+.line-name{font-weight:700}
+.line-extra{color:var(--soft);padding-left:.6em;font-size:.93rem}
+.line-price{font-weight:700;white-space:nowrap}
+.total{display:flex;justify-content:space-between;margin-top:14px;padding-top:10px;border-top:2px dashed var(--ink);font-size:1.25rem;font-weight:700}
+.receipt-empty{color:var(--soft);padding:12px 0 6px}
+.note{display:grid;gap:6px;font-weight:800;margin-bottom:14px}
+.note input{border:var(--edge);border-radius:12px;padding:9px 12px;background:var(--paper);font-weight:600}
+.note input:disabled{opacity:.55}
+
+.right{display:grid;gap:22px}
+.kitchen{background:#14202B;color:#FFB23E;border:var(--edge);border-radius:8px;box-shadow:5px 5px 0 var(--ink);overflow:hidden;font-family:var(--receipt)}
+.kitchen-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0C141B;border-bottom:2px solid #2A3B4A;color:#9FB2C4;font-size:.9rem}
+.led{width:11px;height:11px;border-radius:50%;background:#4A5966}
+.led.on{background:#3DDC84;box-shadow:0 0 9px #3DDC84}
+.kitchen-body{padding:14px;min-height:150px;font-size:.98rem}
+.ticket-title{font-weight:700;font-size:1.08rem;margin-bottom:6px}
+.dish-list{list-style:none;padding:0;margin-bottom:10px}
+.dish-list li::before{content:"\25B8  "}
+.kitchen-note{color:#FFD9A0;margin-bottom:10px}
+.kitchen-log{border-top:1px dashed #4A5966;padding-top:8px;color:#9FB2C4;font-size:.9rem}
+.screen-empty{color:#9FB2C4}
+.kitchen-controls{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+
+.phone{width:min(100%,310px);margin:0 auto;background:var(--paper);border:var(--edge);border-radius:34px;box-shadow:5px 5px 0 var(--ink);padding:12px 14px 18px}
+.phone-notch{width:72px;height:9px;border-radius:99px;background:var(--ink);margin:0 auto 10px}
+.phone-title{text-align:center;font-weight:800;margin-bottom:8px}
+.phone-screen{min-height:150px;display:flex;flex-direction:column;gap:8px}
+.bubble{background:var(--mint);border-radius:16px 16px 16px 4px;padding:8px 12px;max-width:92%;font-weight:600;animation:bubbleIn .25s ease-out}
+.bubble.payment{background:var(--butter)}
+.phone-empty{color:var(--soft);font-size:.95rem;padding:6px 4px}
+.phone-total{margin-top:12px;display:flex;justify-content:space-between;font-weight:800;font-size:1.1rem}
+.pay-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.pay-row .btn{font-size:.95rem;padding:.6em .5em}
+
+.patterns{margin-top:30px}
+.pins{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.pin{border:var(--edge);border-radius:999px;background:var(--paper);padding:5px 16px;font-weight:800;cursor:help;transition:background .2s}
+.pin.lit{background:var(--butter);animation:pinPulse .9s ease-out}
+.pattern-caption{font-weight:700;max-width:80ch;min-height:2.9em}
+
+.welcome{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:rgba(207,239,226,.94)}
+.welcome-card{width:min(100%,430px);background:var(--paper);border:var(--edge);border-radius:26px;box-shadow:7px 7px 0 var(--ink);padding:28px 26px}
+.welcome-card .sign{display:inline-block;margin-bottom:18px}
+.welcome-card h2{font-size:1.5rem}
+.field{display:grid;gap:6px;font-weight:800;margin-bottom:14px}
+.field input{border:var(--edge);border-radius:12px;padding:10px 12px;background:var(--paper);font-weight:600}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:40;max-width:min(92vw,520px);background:var(--ink);color:var(--paper);
+  border-radius:14px;padding:12px 18px;font-weight:700;box-shadow:4px 4px 0 var(--cherry)}
+.confetti{position:fixed;top:-16px;width:11px;height:15px;border:1.5px solid var(--ink);z-index:50;pointer-events:none;animation:fall linear forwards}
+
+@keyframes lineIn{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+@keyframes bubbleIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes pinPulse{0%{transform:scale(1)}30%{transform:scale(1.14)}100%{transform:scale(1)}}
+@keyframes fall{to{transform:translate(var(--drift),112vh) rotate(560deg)}}
+
+@media (max-width:1100px){
+  .stage{grid-template-columns:1fr 1fr}
+  .right{grid-column:1/-1;grid-template-columns:1fr 1fr;align-items:start}
+}
+@media (max-width:720px){
+  .stage,.right{grid-template-columns:1fr}
+  .tracker li{font-size:.85rem}
+  .tracker .icon{width:44px;height:44px}
+  .tracker li::before{top:20px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="checker" aria-hidden="true"></div>
+
+<header class="shell top">
+  <h1 class="sign">Pattern Diner</h1>
+  <div class="order-chips" id="orderChips" hidden></div>
+</header>
+
+<main class="shell">
+  <section aria-label="Order progress">
+    <ol class="tracker" id="tracker">
+      <li data-step="NEW"><span class="icon" aria-hidden="true">📝</span>Order received</li>
+      <li data-step="COOKING"><span class="icon" aria-hidden="true">🔥</span>Cooking</li>
+      <li data-step="READY"><span class="icon" aria-hidden="true">🔔</span>Ready</li>
+      <li data-step="PAID"><span class="icon" aria-hidden="true">💰</span>Paid</li>
+    </ol>
+    <p class="next-step" id="nextStep" aria-live="polite"></p>
+  </section>
+
+  <div class="stage">
+    <section class="panel" aria-labelledby="menuTitle">
+      <h2 id="menuTitle">Build your meal</h2>
+      <div class="meal-choices" id="mealChoices"></div>
+      <div class="toppings-block" id="toppingsBlock"></div>
+      <button class="btn full" id="addButton" type="button">Add to order</button>
+    </section>
+
+    <section aria-labelledby="orderTitle">
+      <h2 id="orderTitle">Your order</h2>
+      <div class="receipt" id="receipt"></div>
+      <label class="note">Note for the kitchen
+        <input id="noteInput" maxlength="80" placeholder="For example: no onions, please" autocomplete="off">
+      </label>
+      <button class="btn full" id="sendButton" type="button">Send to kitchen</button>
+    </section>
+
+    <div class="right">
+      <section aria-labelledby="kitchenTitle">
+        <h2 id="kitchenTitle">Kitchen screen</h2>
+        <div class="kitchen">
+          <div class="kitchen-bar"><span class="led" id="kitchenLed"></span>Kitchen display</div>
+          <div class="kitchen-body" id="kitchenBody"></div>
+        </div>
+        <div class="kitchen-controls">
+          <button class="btn light" id="cookButton" type="button">Start cooking</button>
+          <button class="btn light" id="readyButton" type="button">Mark as ready</button>
+        </div>
+      </section>
+
+      <section aria-labelledby="phoneTitle">
+        <h2 id="phoneTitle">Customer phone</h2>
+        <div class="phone">
+          <div class="phone-notch" aria-hidden="true"></div>
+          <div class="phone-title" id="phoneTitle2">Pattern Diner</div>
+          <div class="phone-screen" id="phoneScreen" aria-live="polite"></div>
+          <div class="phone-total" id="phoneTotal" hidden><span>Total</span><span id="phoneTotalValue"></span></div>
+          <div class="pay-row">
+            <button class="btn teal" id="payCardButton" type="button">Pay by card</button>
+            <button class="btn teal" id="payCashButton" type="button">Pay in cash</button>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:16px">
+          <button class="btn" id="newOrderButton" type="button" hidden>Start a new order</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <section class="panel patterns" aria-labelledby="patternsTitle">
+    <h2 id="patternsTitle">Design patterns at work</h2>
+    <div class="pins" id="pins"></div>
+    <p class="pattern-caption" id="patternCaption" aria-live="polite">Every button you press uses some of these patterns. The ones involved light up here.</p>
+  </section>
+</main>
+
+<div class="welcome" id="welcome" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" hidden>
+  <form class="welcome-card" id="welcomeForm">
+    <div class="sign">Pattern Diner</div>
+    <h2 id="welcomeTitle">Welcome! Take a seat.</h2>
+    <label class="field">Table number
+      <input id="tableInput" type="number" min="1" max="30" value="1" required>
+    </label>
+    <label class="field">Your name
+      <input id="nameInput" maxlength="30" placeholder="Anna" autocomplete="off">
+    </label>
+    <button class="btn full" type="submit">Start order</button>
+  </form>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const money = n => '$' + Number(n).toFixed(2);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const EMOJI = {PIZZA:'🍕', BURGER:'🍔', FRENCH_FRIES:'🍟'};
+const STEPS = ['NEW','COOKING','READY','PAID'];
+const NEXT_STEP = {
+  NO_ORDER:'Tell us your table to open a new order.',
+  DRAFT:'Pick a meal, choose toppings and add it to your order. Send it to the kitchen when you are done.',
+  NEW:'The kitchen has your order. Press Start cooking on the kitchen screen.',
+  COOKING:'The food is on the stove. Press Mark as ready when the kitchen is done.',
+  READY:'The food is ready. Pay by card or in cash on the customer phone.',
+  PAID:'Paid and done. Start a new order whenever you like.'
+};
+const PATTERN_INFO = {
+  'Facade':'One entry point. This page only talks to RestaurantFacade.',
+  'Factory Method':'Creates the right dish: PizzaFactory, BurgerFactory or FrenchFriesFactory.',
+  'Decorator':'Wraps a dish with a topping. Each topping adds its name and price.',
+  'Builder':'Collects table, name, note and meals step by step, then builds the Order.',
+  'Observer':'Tells the kitchen and the customer every time the order status changes.',
+  'Strategy':'The payment method (card or cash) can be swapped without touching the rest.'
+};
+const ACTIONS = {
+  start:{lit:['Facade','Builder'], caption:'Facade opened the order and Builder started collecting its details.'},
+  add:{lit:['Facade','Factory Method','Decorator','Builder'], caption:'Factory Method made the dish, Decorator wrapped each topping around it and Builder stored it in the order.'},
+  send:{lit:['Facade','Builder','Observer'], caption:'Builder finished the order. Observer told the kitchen and the customer.'},
+  cook:{lit:['Facade','Observer'], caption:'The status changed to cooking. Observer notified the kitchen and the customer.'},
+  ready:{lit:['Facade','Observer'], caption:'The status changed to ready. Observer notified the kitchen and the customer.'},
+  pay:{lit:['Facade','Strategy','Observer'], caption:'Strategy ran the chosen payment method. Observer announced that the order is paid.'}
+};
+
+let menu = null, order = null;
+let selectedMeal = null, selectedToppings = new Set();
+let welcomeWasOpen = false, shownMealCount = 0, toastTimer = null;
+
+async function request(path, method){
+  let response;
+  try { response = await fetch(path, {method: method || 'GET'}); }
+  catch (e) { throw new Error('Cannot reach the diner server. Is the Java program still running?'); }
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Something went wrong.');
+  return data;
+}
+
+async function act(path, actionKey){
+  try {
+    order = await request(path, 'POST');
+    if (actionKey) lightUpPatterns(actionKey);
+    render();
+    if (actionKey === 'pay') throwConfetti();
+    return true;
+  } catch (e) { showToast(e.message); return false; }
+}
+
+function showToast(text){
+  const toast = $('toast');
+  toast.textContent = text; toast.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toast.hidden = true; }, 4500);
+}
+
+function lightUpPatterns(actionKey){
+  const action = ACTIONS[actionKey];
+  document.querySelectorAll('.pin').forEach(pin => {
+    pin.classList.remove('lit');
+    if (action.lit.includes(pin.dataset.pattern)) { void pin.offsetWidth; pin.classList.add('lit'); }
+  });
+  $('patternCaption').textContent = action.caption;
+}
+
+function throwConfetti(){
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const colors = ['#D6283E','#FFD45C','#1F8A70','#1B2430','#FFFFFF'];
+  for (let i = 0; i < 46; i++){
+    const piece = document.createElement('i');
+    piece.className = 'confetti';
+    piece.style.left = (Math.random() * 100) + 'vw';
+    piece.style.background = colors[i % colors.length];
+    piece.style.animationDuration = (1.7 + Math.random() * 1.4) + 's';
+    piece.style.animationDelay = (Math.random() * 0.4) + 's';
+    piece.style.setProperty('--drift', (Math.random() * 180 - 90) + 'px');
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 3800);
+  }
+}
+
+function currentMeal(){ return menu.meals.find(m => m.id === selectedMeal); }
+
+function renderHeader(){
+  const chips = $('orderChips');
+  const started = order.status !== 'NO_ORDER';
+  chips.hidden = !started;
+  if (started) chips.innerHTML = `<span class="chip">Order #${order.orderNumber}</span><span class="chip">Table ${order.tableNumber}</span><span class="chip">${esc(order.customerName)}</span>`;
+}
+
+function renderTracker(){
+  const index = STEPS.indexOf(order.status);
+  document.querySelectorAll('#tracker li').forEach((item, i) => {
+    item.classList.toggle('done', index > i || order.status === 'PAID');
+    item.classList.toggle('current', index === i && order.status !== 'PAID');
+  });
+  $('nextStep').textContent = NEXT_STEP[order.status];
+}
+
+function renderMenu(){
+  const locked = order.status !== 'DRAFT';
+  if (locked) { selectedMeal = null; selectedToppings.clear(); }
+  $('mealChoices').innerHTML = menu.meals.map(m =>
+    `<button class="meal-choice" type="button" data-meal="${m.id}" aria-pressed="${m.id === selectedMeal}" ${locked ? 'disabled' : ''}>
+       <span class="meal-emoji" aria-hidden="true">${EMOJI[m.id] || '🍽️'}</span>
+       <span class="meal-name">${esc(m.name)}</span>
+       <span class="meal-price">${money(m.price)}</span>
+     </button>`).join('');
+
+  const block = $('toppingsBlock');
+  const meal = selectedMeal ? currentMeal() : null;
+  if (locked && order.status !== 'NO_ORDER') {
+    block.innerHTML = '<p class="hint">This order is with the kitchen. Pay for it, then start a new order to add more food.</p>';
+  } else if (!meal) {
+    block.innerHTML = '<p class="hint">Choose a meal above to see the toppings that go with it.</p>';
+  } else {
+    block.innerHTML = `<p class="toppings-title">Toppings for ${esc(meal.name.toLowerCase())}</p><div class="topping-list">` +
+      meal.toppings.map(t =>
+        `<button class="topping" type="button" data-topping="${t.id}" aria-pressed="${selectedToppings.has(t.id)}">
+           <span class="tick" aria-hidden="true"></span>${esc(t.name)}<span class="extra">+${money(t.price)}</span>
+         </button>`).join('') + '</div>';
+  }
+
+  const add = $('addButton');
+  add.disabled = locked || !meal;
+  if (meal) {
+    const extras = meal.toppings.filter(t => selectedToppings.has(t.id)).reduce((sum, t) => sum + Number(t.price), 0);
+    add.innerHTML = `Add to order <span class="price-badge">${money(Number(meal.price) + extras)}</span>`;
+  } else add.textContent = 'Add to order';
+}
+
+function renderReceipt(){
+  const started = order.status !== 'NO_ORDER';
+  let html = `<div class="receipt-head"><strong>Pattern Diner</strong>` +
+    (started ? `<span>Order #${order.orderNumber}</span><span>Table ${order.tableNumber} for ${esc(order.customerName)}</span>` : '<span>Open a table to start</span>') + '</div>';
+  if (order.meals.length === 0) {
+    html += '<p class="receipt-empty">Your order is empty. Pick a meal to start.</p>';
+  } else {
+    html += '<ul class="lines">' + order.meals.map((meal, i) => {
+      const parts = meal.description.split(' + ');
+      const fresh = i === order.meals.length - 1 && order.meals.length > shownMealCount;
+      return `<li class="line${fresh ? ' fresh' : ''}"><div><div class="line-name">${esc(parts[0])}</div>` +
+        parts.slice(1).map(extra => `<div class="line-extra">+ ${esc(extra)}</div>`).join('') +
+        `</div><div class="line-price">${money(meal.price)}</div></li>`;
+    }).join('') + '</ul>';
+  }
+  html += `<div class="total"><span>Total</span><span>${money(order.total)}</span></div>`;
+  shownMealCount = order.meals.length;
+  $('receipt').innerHTML = html;
+
+  const draft = order.status === 'DRAFT';
+  $('sendButton').disabled = !draft || order.meals.length === 0;
+  $('noteInput').disabled = !draft;
+  if (order.status === 'NO_ORDER' || (draft && order.meals.length === 0 && !$('noteInput').value)) $('noteInput').value = '';
+}
+
+function renderKitchen(){
+  const lines = order.messages.filter(m => m.channel === 'KITCHEN');
+  const dishes = order.messages.filter(m => m.channel === 'KITCHEN_DISH');
+  $('kitchenLed').classList.toggle('on', lines.length > 0 && order.status !== 'PAID');
+  if (lines.length === 0) {
+    $('kitchenBody').innerHTML = '<p class="screen-empty">No tickets yet. New orders show up here.</p>';
+  } else {
+    $('kitchenBody').innerHTML =
+      `<div class="ticket-title">Order #${order.orderNumber}, table ${order.tableNumber}</div>` +
+      '<ul class="dish-list">' + dishes.map(d => `<li>${esc(d.text)}</li>`).join('') + '</ul>' +
+      (order.comment ? `<p class="kitchen-note">Note: ${esc(order.comment)}</p>` : '') +
+      '<div class="kitchen-log">' + lines.map(l => `<div>&gt; ${esc(l.text)}</div>`).join('') + '</div>';
+  }
+  $('cookButton').disabled = order.status !== 'NEW';
+  $('readyButton').disabled = order.status !== 'COOKING';
+}
+
+function renderPhone(){
+  const messages = order.messages.filter(m => m.channel === 'CUSTOMER' || m.channel === 'PAYMENT');
+  const screen = $('phoneScreen');
+  const previousCount = screen.children.length;
+  if (messages.length === 0) {
+    screen.innerHTML = '<p class="phone-empty">Messages from the diner appear here.</p>';
+  } else {
+    screen.innerHTML = messages.map((m, i) =>
+      `<div class="bubble${m.channel === 'PAYMENT' ? ' payment' : ''}" ${i < previousCount ? 'style="animation:none"' : ''}>${esc(m.text)}</div>`).join('');
+  }
+  const sent = ['NEW','COOKING','READY','PAID'].includes(order.status);
+  $('phoneTotal').hidden = !sent;
+  $('phoneTotalValue').textContent = money(order.total);
+  $('payCardButton').disabled = order.status !== 'READY';
+  $('payCashButton').disabled = order.status !== 'READY';
+  $('newOrderButton').hidden = order.status !== 'PAID';
+}
+
+function renderWelcome(){
+  const shouldOpen = order.status === 'NO_ORDER' || welcomeRequested;
+  $('welcome').hidden = !shouldOpen;
+  if (shouldOpen && !welcomeWasOpen) setTimeout(() => $('tableInput').focus(), 30);
+  welcomeWasOpen = shouldOpen;
+}
+
+let welcomeRequested = false;
+
+function render(){
+  renderHeader(); renderTracker(); renderMenu(); renderReceipt(); renderKitchen(); renderPhone(); renderWelcome();
+}
+
+function bindEvents(){
+  $('mealChoices').addEventListener('click', e => {
+    const button = e.target.closest('.meal-choice');
+    if (!button || button.disabled) return;
+    selectedMeal = button.dataset.meal; selectedToppings.clear(); renderMenu();
+  });
+  $('toppingsBlock').addEventListener('click', e => {
+    const button = e.target.closest('.topping');
+    if (!button) return;
+    const id = button.dataset.topping;
+    selectedToppings.has(id) ? selectedToppings.delete(id) : selectedToppings.add(id);
+    renderMenu();
+  });
+  $('addButton').addEventListener('click', async () => {
+    if (!selectedMeal) return;
+    const toppings = [...selectedToppings].join(',');
+    const ok = await act(`/api/add?meal=${encodeURIComponent(selectedMeal)}&toppings=${encodeURIComponent(toppings)}`, 'add');
+    if (ok) { selectedToppings.clear(); renderMenu(); }
+  });
+  $('sendButton').addEventListener('click', async () => {
+    const note = $('noteInput').value.trim();
+    if (note) { const saved = await act('/api/comment?text=' + encodeURIComponent(note)); if (!saved) return; }
+    await act('/api/send', 'send');
+  });
+  $('cookButton').addEventListener('click', () => act('/api/cook', 'cook'));
+  $('readyButton').addEventListener('click', () => act('/api/ready', 'ready'));
+  $('payCardButton').addEventListener('click', () => act('/api/pay?method=CARD', 'pay'));
+  $('payCashButton').addEventListener('click', () => act('/api/pay?method=CASH', 'pay'));
+  $('newOrderButton').addEventListener('click', () => { welcomeRequested = true; renderWelcome(); });
+  $('welcomeForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const table = $('tableInput').value, name = $('nameInput').value;
+    welcomeRequested = false;
+    const ok = await act(`/api/start?table=${encodeURIComponent(table)}&name=${encodeURIComponent(name)}`, 'start');
+    if (ok) { selectedMeal = null; selectedToppings.clear(); $('noteInput').value = ''; shownMealCount = 0; $('nameInput').value = ''; render(); }
+    else { welcomeRequested = true; renderWelcome(); }
+  });
+}
+
+async function init(){
+  $('pins').innerHTML = Object.keys(PATTERN_INFO).map(name =>
+    `<span class="pin" data-pattern="${name}" title="${esc(PATTERN_INFO[name])}">${name}</span>`).join('');
+  bindEvents();
+  try {
+    menu = await request('/api/menu');
+    order = await request('/api/state');
+    shownMealCount = order.meals.length;
+    render();
+  } catch (e) { showToast(e.message); }
+}
+init();
+})();
+</script>
+</body>
+</html>
