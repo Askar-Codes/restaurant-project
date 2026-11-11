@@ -36,7 +36,7 @@ public class Main {
         System.out.println("===== ORDER 2 =====");
         restaurant.startNewOrder(5, "Daniel");
         restaurant.addMealToOrder(MealType.PIZZA, ToppingType.SAUSAGE, ToppingType.SWEET_PEPPER);
-        restaurant.addMealToOrder(MealType.FRENCH_FRIES, ToppingType.TOMATO_SAUCE);
+        restaurant.addMealToOrder(MealType.FRENCH_FRIES, ToppingType.TOMATO_SAUCE, ToppingType.BACON); // bacon is a wrong topping for fries: it is rejected
 
         restaurant.sendOrderToKitchen();
         restaurant.startCookingOrder();
