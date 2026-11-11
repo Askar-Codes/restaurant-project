@@ -30,9 +30,17 @@ public class RestaurantFacade {
     public void addMealToOrder(MealType mealType, ToppingType... toppings) {
         Meal meal = mealType.createMeal();              // Factory Method
         for (ToppingType topping : toppings) {
-            meal = topping.addTo(meal);                 // Decorator
+            meal = addToppingOnlyIfItFitsTheMeal(meal, mealType, topping);   // Decorator
         }
         orderBuilder.addMeal(meal);                     // Builder
+    }
+
+    private Meal addToppingOnlyIfItFitsTheMeal(Meal meal, MealType mealType, ToppingType topping) {
+        if (!topping.canBeAddedTo(mealType)) {
+            System.out.println("[WARNING] " + topping + " cannot be added to " + mealType + ", skipped.");
+            return meal;
+        }
+        return topping.addTo(meal);
     }
 
     public void addCommentToOrder(String comment) {
